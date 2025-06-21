@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetAssist AI - Especialista en Redes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .message-animation {
+            animation: fadeInUp 0.4s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .typing-indicator {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .network-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 20%, #2563eb 40%, #3b82f6 60%, #60a5fa 80%, #93c5fd 100%);
+        }
+        
+        .chat-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+        
+        .bot-message {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #334155;
+            border-radius: 18px 18px 18px 4px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .command-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            border-left: 4px solid #3b82f6;
+            position: relative;
+            margin: 10px 0;
+            padding: 15px;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.4);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quick-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .quick-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .input-field {
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .network-icon {
+            animation: networkPulse 2s infinite;
+        }
+        
+        @keyframes networkPulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+        }
+        
+        .specialty-badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+        
+        .code-copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(59, 130, 246, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .command-block:hover .code-copy-btn {
+            opacity: 1;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 18px 18px 18px 4px;
+            border-left: 4px solid #fca5a5;
+        }
+    </style>
+</head>
+<body class="network-bg min-h-screen">
+    <!-- Floating Network Animation -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 left-10 w-2 h-2 bg-blue-300 rounded-full opacity-60 animate-ping"></div>
+        <div class="absolute top-32 right-20 w-1 h-1 bg-blue-400 rounded-full opacity-40 animate-pulse"></div>
+        <div class="absolute bottom-20 left-1/4 w-1.5 h-1.5 bg-blue-200 rounded-full opacity-50 animate-bounce"></div>
+        <div class="absolute bottom-40 right-1/3 w-2 h-2 bg-blue-300 rounded-full opacity-30 animate-ping"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6 max-w-6xl relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center items-center space-x-4 mb-6">
+                <div class="network-icon w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                    <i class="fas fa-network-wired text-2xl text-blue-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold text-white">NetAssist AI</h1>
+                    <div class="specialty-badge mt-2">Especialista en Redes de Computadoras</div>
+                </div>
+            </div>
+            <p class="text-white/90 text-lg max-w-2xl mx-auto">
+                Chatbot inteligente para asistencia en configuración y diagnóstico de redes. 
+                Obtén ayuda con comandos CLI, protocolos de enrutamiento y resolución de problemas.
+            </p>
+        </div>
+
+        <!-- Main Chat Interface -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Quick Actions Sidebar -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="chat-container p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-bolt text-blue-600 mr-2"></i>
+                        Consultas Rápidas
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="quickQuery('Cómo configurar una VLAN en un switch Cisco. Proporciona comandos paso a paso')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-sitemap mr-2 text-blue-600"></i>
+                            Configurar VLAN
+                        </button>
+                        <button onclick="quickQuery('Comandos básicos de diagnóstico de red en Windows y Linux con ejemplos')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-terminal mr-2 text-green-600"></i>
+                            Comandos diagnóstico
+                        </button>
+                        <button onclick="quickQuery('Cómo configurar OSPF en un router Cisco paso a paso con comandos')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-route mr-2 text-purple-600"></i>
+                            Protocolo OSPF
+                        </button>
+                        <button onclick="quickQuery('Guía completa para solucionar problemas de conectividad de red')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-tools mr-2 text-orange-600"></i>
+                            Troubleshooting
+                        </button>
+                        <button onclick="quickQuery('Configuración de firewall básico en router Cisco con ACL')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-shield-alt mr-2 text-red-600"></i>
+                            Firewall & ACL
+                        </button>
+                        <button onclick="quickQuery('Diferencias entre RIP, OSPF y BGP con cuándo usar cada uno')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-exchange-alt mr-2 text-indigo-600"></i>
+                            Protocolos enrutamiento
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Network Tools -->
+                <div class="chat-container p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-wrench text-blue-600 mr-2"></i>
+                        Herramientas de Red
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="quickQuery('Cálculo de subredes: explica cómo dividir la red 192.168.1.0/24 en 4 subredes')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-calculator mr-2 text-blue-600"></i>
+                            Calc. Subredes
+                        </button>
+                        <button onclick="quickQuery('Lista de puertos TCP/UDP más comunes y sus servicios asociados')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-list mr-2 text-green-600"></i>
+                            Puertos comunes
+                        </button>
+                        <button onclick="quickQuery('Tipos de cables de red y conectores: UTP, STP, fibra óptica')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-plug mr-2 text-yellow-600"></i>
+                            Cableado
+                        </button>
+                        <button onclick="quickQuery('Configuración de switch básico: hostname, passwords, SSH')" class="quick-btn w-full p-3 rounded-lg text-sm text-left hover:scale-105 transition-transform">
+                            <i class="fas fa-server mr-2 text-purple-600"></i>
+                            Config. Switch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Connection Status -->
+                <div class="chat-container p-4">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-robot mr-2 text-blue-600"></i>
+                            Estado: Conectado
+                            <span class="status-indicator"></span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">
+                            Powered by Gemini AI
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="lg:col-span-3">
+                <div class="chat-container h-full flex flex-col" style="height: 600px;">
+                    <!-- Chat Header -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-robot text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800">NetAssist AI</h3>
+                                    <p class="text-gray-500 text-sm">Especialista en configuración y diagnóstico de redes</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="clearChat()" class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button onclick="exportChat()" class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="flex-1 p-6 overflow-y-auto scrollbar-hide">
+                        <!-- Messages will be inserted here dynamically -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-6 border-t border-gray-200">
+                        <div class="flex space-x-4">
+                            <input id="chat-input" type="text" placeholder="Escribe tu consulta sobre redes..." class="input-field flex-1 px-4 py-3 rounded-lg focus:outline-none">
+                            <button id="send-btn" class="send-btn text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center">
+                                <i class="fas fa-paper-plane mr-2"></i> Enviar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const chatMessages = document.getElementById('chat-messages');
+            const quickQueryBtns = document.querySelectorAll('.quick-btn');
+            
+            // Historial del chat
+            let chatHistory = [];
+            
+            // Función para añadir mensaje al chat
+            function addMessage(content, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `p-4 mb-4 max-w-3/4 ${isUser ? 'user-message ml-auto' : 'bot-message mr-auto'} message-animation`;
+                
+                // Formatear contenido con saltos de línea
+                const formattedContent = content.replace(/\n/g, '<br>');
+                
+                // Detectar bloques de comandos (simulado)
+                const commandBlocks = formattedContent.match(/```[\s\S]*?```/g) || [];
+                let displayContent = formattedContent;
+                
+                commandBlocks.forEach(block => {
+                    const cleanBlock = block.replace(/```[\w]*/g, '').trim();
+                    displayContent = displayContent.replace(block, 
+                        `<div class="command-block mono text-sm overflow-x-auto">
+                            <button class="code-copy-btn" onclick="copyToClipboard(this)">Copiar</button>
+                            ${cleanBlock}
+                        </div>`);
+                });
+                
+                messageDiv.innerHTML = displayContent;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Guardar en historial
+                chatHistory.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: content
+                });
+            }
+            
+            // Función para consultas rápidas
+            function quickQuery(query) {
+                chatInput.value = query;
+                sendMessage();
+            }
+            
+            // Función para enviar mensaje
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message === '') return;
+                
+                addMessage(message, true);
+                chatInput.value = '';
+                sendBtn.disabled = true;
+                
+                // Mostrar indicador de escritura
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'bot-message mr-auto p-4 mb-4 max-w-3/4';
+                typingIndicator.id = 'typing-indicator';
+                typingIndicator.innerHTML = '<div class="typing-indicator flex space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full"></div><div class="w-2 h-2 bg-gray-400 rounded-full"></div><div class="w-2 h-2 bg-gray-400 rounded-full"></div></div>';
+                chatMessages.appendChild(typingIndicator);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Simular respuesta del asistente (en un caso real, aquí harías una llamada API)
+                setTimeout(() => {
+                    document.getElementById('typing-indicator').remove();
+                    const response = generateMockResponse(message);
+                    addMessage(response);
+                }, 1500);
+            }
+            
+            // Función para generar respuestas simuladas
+           function generateMockResponse(query) {
+    // Verificar que el input sea válido
+    if (typeof query !== 'string' || query.trim() === '') {
+        return 'Por favor ingresa una consulta válida sobre redes.';
+    }
+    
+    const lowerQuery = query.toLowerCase();
+    
+    try {
+        if (lowerQuery.includes('vlan')) {
+            return `Para configurar una VLAN en un switch Cisco, sigue estos pasos:\n\n` +
+                   `1. Entrar en modo configuración:\n` +
+                   "```\nconfigure terminal\n```\n\n" +
+                   `2. Crear la VLAN:\n` +
+                   "```\nvlan 10\nname Ventas\n```\n\n" +
+                   `3. Asignar puertos a la VLAN:\n` +
+                   "```\ninterface range fastEthernet 0/1 - 10\nswitchport mode access\nswitchport access vlan 10\n```";
+        } else if (lowerQuery.includes('ospf')) {
+            return `Configuración básica de OSPF en Cisco:\n\n` +
+                   "```\nrouter ospf 1\nnetwork 192.168.1.0 0.0.0.255 area 0\nnetwork 10.0.0.0 0.255.255.255 area 0\n```\n\n" +
+                   `Para verificar la configuración:\n` +
+                   "```\nshow ip ospf neighbor\nshow ip ospf interface\n```";
+        } else if (lowerQuery.includes('diagnóstico') || lowerQuery.includes('diagnostico')) {
+            return `Comandos útiles para diagnóstico de red:\n\n` +
+                   `En Windows:\n` +
+                   "```\nping 8.8.8.8\ntracert google.com\nipconfig /all\nnetstat -ano\n```\n\n" +
+                   `En Linux:\n` +
+                   "```\nping 8.8.8.8\ntraceroute google.com\nifconfig\nnetstat -tulnp\n```";
+        } else if (lowerQuery.includes('subredes') || lowerQuery.includes('subred')) {
+            return `Para dividir 192.168.1.0/24 en 4 subredes:\n\n` +
+                   `1. Necesitamos 2 bits de préstamo (2^2=4 subredes)\n` +
+                   `2. Nueva máscara: /26 (255.255.255.192)\n` +
+                   `3. Subredes:\n` +
+                   "```\n1. 192.168.1.0/26 (hosts 1-62)\n2. 192.168.1.64/26 (hosts 65-126)\n3. 192.168.1.128/26 (hosts 129-190)\n4. 192.168.1.192/26 (hosts 193-254)\n```";
+        } else {
+            return `Gracias por tu consulta sobre redes. Como asistente especializado, puedo ayudarte con:\n\n` +
+                   `- Configuración de switches y routers\n- Protocolos de enrutamiento (OSPF, BGP, EIGRP)\n` +
+                   `- Solución de problemas de conectividad\n- Diseño de topologías de red\n\n` +
+                   `¿Puedes proporcionar más detalles sobre lo que necesitas?`;
+        }
+    } catch (error) {
+        console.error('Error al generar respuesta:', error);
+        return 'Ocurrió un error al procesar tu consulta. Por favor intenta nuevamente.';
+    }
+}
+            
+            // Función para limpiar el chat
+            function clearChat() {
+                chatMessages.innerHTML = '';
+                chatHistory = [];
+                addMessage('¡Hola! Soy NetAssist AI, tu especialista en redes. ¿En qué puedo ayudarte hoy?');
+            }
+            
+            // Función para copiar al portapapeles
+            window.copyToClipboard = function(button) {
+                const codeBlock = button.parentElement;
+                const textToCopy = codeBlock.innerText.replace('Copiar', '').trim();
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    button.textContent = '¡Copiado!';
+                    setTimeout(() => {
+                        button.textContent = 'Copiar';
+                    }, 2000);
+                });
+            };
+            
+            // Función para exportar el chat
+            function exportChat() {
+                const chatContent = chatMessages.innerText;
+                const blob = new Blob([chatContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'netassist-chat.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // Event listeners
+            sendBtn.addEventListener('click', sendMessage);
+            
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            chatInput.addEventListener('input', function() {
+                sendBtn.disabled = chatInput.value.trim() === '';
+            });
+            
+            // Exponer funciones al ámbito global para los botones HTML
+            window.quickQuery = quickQuery;
+            window.clearChat = clearChat;
+            window.exportChat = exportChat;
+            
+            // Mensaje inicial
+            addMessage('¡Hola! Soy NetAssist AI, tu especialista en redes. ¿En qué puedo ayudarte hoy?');
+        });
+    </script>
+</body>
+</html>
